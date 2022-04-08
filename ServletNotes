@@ -1,10 +1,10 @@
---------	REQUEST		------------------------
-|      | -------------> | # *<---------------------Servlet
-|	   |	abc.html	| index.html		   |	
-|	   | <------------- | #					   |
---------	RESPONSE	| Deployment Descriptor|	//Dep. Desc. = web.xml
- Client					------------------------
-								 Server
+------------		REQUEST	    		---------------------------------
+|          | ---------------------------------> | # *<-----------------------------------Servlet
+|	   |		abc.html    		| index.html			|	
+|	   | <--------------------------------- | #				|
+------------		RESPONSE    		| Deployment Descriptor     	|	//Dep. Desc. = web.xml
+  Client			    		---------------------------------
+					 			Server			 
 
 In servlet, in web.xml we have 2 tags:
 1) <servlet> -> sub-tags -> <servlet-name> & <servlet-class>
