@@ -1,0 +1,277 @@
+--------	REQUEST		------------------------
+|      | -------------> | # *<---------------------Servlet
+|	   |	abc.html	| index.html		   |	
+|	   | <------------- | #					   |
+--------	RESPONSE	| Deployment Descriptor|	//Dep. Desc. = web.xml
+ Client					------------------------
+								 Server
+
+In servlet, in web.xml we have 2 tags:
+1) <servlet> -> sub-tags -> <servlet-name> & <servlet-class>
+2) <servlet-mapping> -> sub-tags -> <servlet-name> & <servlet-pattern>	// for url
+
+
+sevlet is normal java class which extends HttpServlet
+
+Servlet Response could be in .html OR .xml OR .JSON
+
+Annotations are now we can use in servlets
+example: 
+	@WebServlet("/abc.html")
+=> We'll discuss about annotations later...
+
+IMP NOTE:
+=> While creating Dynamic Web Project don't forget to check to insert the web.xml deployment descriptor.
+
+create .html
+create .class
+	=> inherit HttpServlet(extends HttpServlet)
+	=> method which can be void service(HttpServletRequest req, HttpServletResponse res)
+	=> type your logic
+in web.xml
+	add tags:
+		<servlet>
+			<servlet-name> name_of_servlet </servlet-name>
+			<servlet-class> class_of_servlet </servlet-class>
+
+		<servlet-mapping>
+			<servlet-name> name_of_servlet </servlet-name>
+			<url-pattern> form_action_name </url-pattern>
+		<servlet-mapping>
+
+
+
+
+
+
+# PrintWriter is used for printing on browser...
+example:
+	PrintWrite out = res.getWriter();
+	out.println("Hello World");		// Hello World will be printed in browser...
+
+
+
+
+
+
+# GET & POST
+ in #GET
+ 	<form> data are visible in URL
+ 	doGet(HttpServletRequest req, HttpServletResponse res) is used instead of service()
+ in #POST
+ 	<form> data NOT visible in URL.
+ 	doPost(HttpServletRequest req, HttpServletResponse res) is used instead of service()
+
+=> if we don't specify then by default GET is used
+
+=> if we specifically serve only POST requests then in servlet class use doPost(). now if we have specified <form method="get">, it'll throw error that "HTTP method GET is not supported by this URL" with status code => HTTP Status 405 - Method Not Allowed
+prefer: TeluskoServlet project => add_two_numbers.html, AddServlet.java(Servlet), web.xml
+
+=> service() supports both GET & POST
+=> but, for security reason we should use doPost()
+
+
+
+# RequestDispatcher Calling a Servlet from Servlet
+	=> 2 ways to call servlet from servlet: 
+		1) Request Dispatcher, 
+		2) Redirect.
+	=> we'll talk here about Redirect later...
+	=> to understand this prefer following:
+		TeluskoServlet2requestDispatcher project => sq(add_two_numbers).html, AddServlet.java(Servlet), SqServlet.java(servlet), web.xml
+
+		=> setAttribute("name_of_var", var_to_pass) is used for passing variable to another servlet
+
+		=> RequestDispatcher rd = req.getResquestDispatcher("url_pattern_name"); is used for calling another servlet
+				in other words, passing control of servlet to another...
+		=> rd.forward(request, response); is used for passing req & res object to another servlet...
+
+		=> req.getAttribute("name_of_var"); is used to retrive passed variable from previous servlet.
+
+
+
+
+
+
+
+# HttpServletRequest & HttpServletResponse
+	=> request which we send to server. it could be anything like, variable or data on which we will perform operations on server.
+	=> response which server provide us. it could be anything like, .html file, .xml file, variable, .json etc.
+
+
+
+
+
+
+
+# RequestDispatcher Vs sendRedirect Theory
+
+	# RequestDispatcher : S1, S2 = Servlets
+			    --------------------->S1(req1(x), res1)------------------->S2(req1(x), res1)
+			   /															|
+		var x /																|
+		Client 																|	
+			  \															   /
+	res1 came  <-----------------------------------------------------------	
+
+	=> here, client won't get res1 is came from S2 clint thinks response came from S1.
+	=> it's ok for small projects like, square(num1+num2)
+
+=> but, let's suppose you are accessing YT on your browser with servlet1, and you are now bored of watching ads.
+	so, you take subscription, now YT will ask for money on another servlet(let suppose on paypal).
+	now here it's required to know that response of subscription or payment deduction come from S2(paypal).
+
+
+	# sendRedirect
+			    ----request1---------------------------->S1(req1(sessioned x), res1)
+			   /														|							
+		var x /<---res came that do redirect on paypal<----response1----/							
+		Client 																	
+			^ \															
+			|  \------request2_bcz_of_redirect---------->S2(req2(sessioned x), res2)														   
+			|<--------res2 came that payment succ/failed<---response2--|		
+
+=> but x could pass to only for 1 requested response, for next x is no longer available.
+	so, we have to set x in session. bcz setAttribute() won't work.
+
+	setAttribute() works for only next servlet.
+
+
+
+
+
+
+Refer: TeluskoServlet3sendRedirect => AddServlet.java, SqServlet.java
+# sendRedirect, URL Writing
+	resp.sendRedirect("sq?n3=" + n3);	// URL pattern like this
+		now in doGet() we can fetch that variable using req.getParameter()
+
+
+
+
+Refer: TeluskoServlet3sendRedirect => AddServlet.java, SqServlet.java
+#Session & Cookie:
+	# Session
+		AddServlet.java
+			HttpSession session = req.getSession();
+			session.setAttribute("key", value);
+			resp.sendRedirect("/sq");
+		SqServlet.java
+			HttpSession session = req.getSession();
+			session.getAttribute("key");
+	
+
+Refer: TeluskoServlet4cookie => AddServlet.java, SqServlet.java
+	# Cookies
+		AddServlet.java
+			Cookie c = new Cookie("key", value + ""); //for converting String
+			response.addCookie(c);
+			response.sendRedirect("sq");
+		SqServlet.java
+			Cookie[] cookie = req.getCookies();
+
+			for (Cookie c : cookie) {
+				if (c.getName().equals("key"))
+					sq = Integer.parseInt(c.getValue());
+			}
+
+
+# Sessions Vs Cookies
+	=> Cookies and Sessions are used to store information. 
+	=> Cookies are only stored on the client-side machine, while sessions get stored on the client as well as a server.
+
+	# Sessions
+		=> A session creates a file in a temporary directory on the server where registered session variables and their values are stored. This data will be available to all pages on the site during that visit.
+
+		=> A session ends when the user closes the browser or after leaving the site, the server will terminate the session after a predetermined period of time, commonly 30 minutes duration.
+
+	# Cookies
+		=> Cookies like tokens, like suppose you buy bread of worth 50₹, and paying 100₹, now due to no change,
+			shopkeeper provides you token, so you can come next time & buy worth of 50₹ from there token.
+		=> Cookies are text files stored on the client computer and they are kept of use tracking purposes. The 	server script sends a set of cookies to the browser. For example name, age, or identification number, etc. The browser stores this information on a local machine for future use.
+
+		=> When the next time the browser sends any request to the web server then it sends those cookies information to the server and the server uses that information to identify the user.
+
+
+
+
+
+
+# ServletConfig & ServletContext
+	=> both are used to give some initial value to Servlet.(just like constructor)
+	=> just insert following in deployment descriptor(web.xml):
+		<context-param>
+			<param-name>name</param-name>
+			<param-value>Akash</param-value>
+		</context-param>
+		<context-param>
+			<param-name>Phone</param-name>
+			<param-value>Nokia</param-value>
+		</context-param>
+
+prefer: TeluskoServlet5ServletContext
+	# ServletContext
+		=> provided intial values are accessible for all servlets.
+
+prefer: TeluskoServlet6ServletConfig
+	# ServletConfig
+		=> initial values for only specific individual servlets.
+		=> individually in it's own servlet we'll provide values.
+		=> so insert initial values in individal servlet tags like following:
+			<servlet>
+
+		  		<servlet-name>abc</servlet-name>
+		  		<servlet-class>com.config.ServletConfigDemo</servlet-class>
+		  		
+		  		<init-param>
+		  			<param-name>name</param-name>
+		  			<param-value>Akki</param-value>
+		  		</init-param>
+		  		<init-param>
+		  			<param-name>Field</param-name>
+		  			<param-value>IT</param-value>
+		  		</init-param>
+
+		  	</servlet>
+		=> here instead of <context-param>, we'll use <init-param>
+
+
+
+
+
+prefer : TeluskoServlet7Annotations
+# Servlet Annotation Configuration
+	=> we have to maintain too many things in web.xml file.
+	=> so now we have Annotations as discussed earliar.
+	=> so if we give annotations, then we don't need to write following...
+		<servlet>
+			<servlet-name></servlet-name>
+			<servlet-class></servlet-class>
+		</servlet>
+		<servlet-mapping>
+			<servlet-name></servlet-name>
+			<url-pattern></url-pattern>
+		</servlet-mapping>
+
+
+
+
+# Why JSP?
+	=> in servlet, every html tag we have to write in out.println() like following:
+		out.println("<html><body bgcolour='cyan'>");
+		out.println("Square = " + sq);
+		out.println("</body></html")
+	=> this is irritating for designers.
+
+	=> so, sun microsystem introduced JSP(Java Server Pages).
+	=> extension: .jsp
+	=> in .jsp file we can easily type html code.
+	=> in .jsp file if java code is required then we can use delimeters(<% %>).
+	=> for every creation of servlet class we have to do following :
+		1) create .class
+		2) extends HttpServlet
+		3) @Override doGet() OR doPost()
+		4) create object of session OR cookie OR ServletConfig OR ServletContext etc
+		5) for printing we have to create object of PrintWriter out = request.getWriter();
+			etc etc...
+		but, JSP provides everything readymade. 
